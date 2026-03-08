@@ -1,0 +1,58 @@
+
+╔══════════════════════════════════════════════════════════════════╗
+║          RAPPORT EDA — NOTAM CLASSIFICATION DATASET             ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Date de génération : 2026-03-08 19:50                            ║
+╠══════════════════════════════════════════════════════════════════╣
+
+📐 DIMENSIONS
+  • Nombre total de NOTAMs  : 2,400
+  • Nombre de features      : 13
+  • Classes (catégories)    : 6
+  • Codes ICAO couverts     : 10
+  • Q-codes uniques         : 19
+
+📊 DISTRIBUTION DES CLASSES
+category
+NAVIGATION_AID          400
+LIGHTING                400
+OBSTACLE                400
+AIRSPACE_RESTRICTION    400
+RUNWAY_CLOSURE          400
+AERODROME_PROCEDURE     400
+
+📏 STATISTIQUES TEXTUELLES
+  • Longueur moyenne (chars) : 31.0 ± 11.4
+  • Longueur médiane (chars) : 30
+  • Min / Max (chars)        : 10 / 57
+  • Mots moyen par NOTAM     : 5.6
+
+🔍 OBSERVATIONS CLÉS
+  1. ÉQUILIBRE : Dataset parfaitement équilibré (ratio max/min = 1.00x)
+     → Pas besoin de SMOTE ou oversampling pour le POC.
+
+  2. SÉPARABILITÉ : La projection SVD 2D montre des clusters visuellement
+     distincts → une classification supervisée est très prometteuse.
+
+  3. VOCABULAIRE : Chaque catégorie possède un lexique technique spécifique
+     (ex: RWY/CLSD → Runway, VOR/ILS → NavAid, TFR/RESTRICTED → Airspace)
+     → TF-IDF sera très efficace comme baseline feature.
+
+  4. LONGUEUR : Les textes sont courts (médiane ~30 chars) et
+     structurés → avantage pour les modèles bag-of-words. Les NOTAMs
+     d'obstruction sont les plus longs (coordonnées GPS incluses).
+
+  5. FEATURES CANDIDATES :
+     → body_text (TF-IDF n-grammes 1-2)
+     → icao_location (localisation)
+     → word_count / char_count (longueur)
+     → q_code prefix (2 premiers caractères)
+
+📁 FICHIERS GÉNÉRÉS
+  • data/processed/notams_clean.csv       (dataset nettoyé)
+  • data/processed/fig_01_class_distribution.png
+  • data/processed/fig_02_text_length.png
+  • data/processed/fig_03_wordclouds.png
+  • data/processed/fig_04_ngrams.png
+  • data/processed/fig_05_airport_qcode.png
+  • data/processed/fig_06_tfidf_svd.png
