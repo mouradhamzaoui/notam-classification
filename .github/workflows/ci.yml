@@ -246,6 +246,7 @@ jobs:
           context: .
           file: docker/api/Dockerfile
           push: false
+          load: true
           tags: notam-api:ci-${{ github.sha }}
           cache-from: type=gha
           cache-to:   type=gha,mode=max
