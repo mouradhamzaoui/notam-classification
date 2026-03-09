@@ -174,3 +174,38 @@
 2026-03-08 21:41:50 | INFO     | monitoring |   ALERT            : 🔴 YES
 2026-03-08 21:41:50 | INFO     | monitoring | 
   Reports saved to : reports/drift/
+2026-03-08 22:13:22 | INFO     | monitoring | =======================================================
+2026-03-08 22:13:22 | INFO     | monitoring |   NOTAM Classification — Drift Monitoring
+2026-03-08 22:13:22 | INFO     | monitoring | =======================================================
+2026-03-08 22:13:22 | INFO     | src.monitoring.drift_detector | [Drift] Reference loaded → 2400 rows, features: ['char_count', 'word_count', 'upper_ratio', 'digit_ratio', 'slash_count', 'has_coordinates']
+2026-03-08 22:13:23 | INFO     | monitoring | Production data: 500 rows (no drift)
+2026-03-08 22:13:24 | INFO     | src.monitoring.drift_detector | [Drift] Report saved → reports\drift\drift_report_20260308_221323.html
+2026-03-08 22:13:24 | INFO     | src.monitoring.drift_detector | [Drift] Metrics: {'dataset_drift': True, 'drift_share': 0.8571428571428571, 'n_drifted': 6, 'n_features': 6, 'timestamp': '2026-03-09T02:13:24.121806'}
+2026-03-08 22:13:24 | INFO     | monitoring | Drift metrics: {'dataset_drift': True, 'drift_share': 0.8571428571428571, 'n_drifted': 6, 'n_features': 6, 'timestamp': '2026-03-09T02:13:24.121806'}
+2026-03-08 22:13:24 | INFO     | src.monitoring.drift_detector | [Drift] Test suite saved → reports\drift\test_suite_20260308_221324.html
+2026-03-08 22:13:24 | INFO     | src.monitoring.drift_detector | [Drift] Test suite: 1/10 passed
+2026-03-08 22:13:24 | INFO     | monitoring | Test suite: {'passed': 1, 'failed': 9, 'total': 10, 'pass_rate': 0.1, 'alert': True}
+2026-03-08 22:13:24 | WARNING  | src.monitoring.drift_detector | [Drift] ⚠️  ALERT — Data drift detected! drift_share=86%
+2026-03-08 22:13:24 | INFO     | monitoring | 
+=======================================================
+2026-03-08 22:13:24 | INFO     | monitoring |   📊 MONITORING SUMMARY
+2026-03-08 22:13:24 | INFO     | monitoring | =======================================================
+2026-03-08 22:13:24 | INFO     | monitoring |   Dataset drift    : ⚠️  YES
+2026-03-08 22:13:24 | INFO     | monitoring |   Drifted features : 6/6
+2026-03-08 22:13:24 | INFO     | monitoring |   Drift share      : 86%
+2026-03-08 22:13:24 | INFO     | monitoring |   Tests passed     : 1/10
+2026-03-08 22:13:24 | INFO     | monitoring |   ALERT            : 🔴 YES
+2026-03-08 22:13:24 | INFO     | monitoring | 
+  Reports saved to : reports/drift/
+2026-03-08 22:14:24 | INFO     | src.monitoring.drift_detector | [Drift] Reference loaded → 2400 rows, features: ['char_count', 'word_count', 'upper_ratio', 'digit_ratio', 'slash_count', 'has_coordinates']
+2026-03-08 22:14:25 | INFO     | src.monitoring.drift_detector | [Drift] Report saved → reports\drift\drift_report_20260308_221425.html
+2026-03-08 22:14:25 | INFO     | src.monitoring.drift_detector | [Drift] Metrics: {'dataset_drift': True, 'drift_share': 0.8571428571428571, 'n_drifted': 6, 'n_features': 6, 'timestamp': '2026-03-09T02:14:25.711978'}
+2026-03-08 22:14:26 | INFO     | src.monitoring.drift_detector | [Drift] Test suite saved → reports\drift\test_suite_20260308_221425.html
+2026-03-08 22:14:26 | INFO     | src.monitoring.drift_detector | [Drift] Test suite: 1/10 passed
+2026-03-08 22:14:26 | WARNING  | src.monitoring.drift_detector | [Drift] ⚠️  ALERT — Data drift detected! drift_share=86%
+2026-03-08 22:25:46 | INFO     | src.monitoring.drift_detector | [Drift] Reference loaded → 2400 rows, features: ['char_count', 'word_count', 'upper_ratio', 'digit_ratio', 'slash_count', 'has_coordinates']
+2026-03-08 22:25:47 | INFO     | src.monitoring.drift_detector | [Drift] Report saved → reports\drift\drift_report_20260308_222547.html
+2026-03-08 22:25:47 | INFO     | src.monitoring.drift_detector | [Drift] Metrics: {'dataset_drift': True, 'drift_share': 0.8571428571428571, 'n_drifted': 6, 'n_features': 6, 'timestamp': '2026-03-09T02:25:47.539019'}
+2026-03-08 22:25:47 | INFO     | src.monitoring.drift_detector | [Drift] Test suite saved → reports\drift\test_suite_20260308_222547.html
+2026-03-08 22:25:47 | INFO     | src.monitoring.drift_detector | [Drift] Test suite: 1/10 passed
+2026-03-08 22:25:47 | WARNING  | src.monitoring.drift_detector | [Drift] ⚠️  ALERT — Data drift detected! drift_share=86%
