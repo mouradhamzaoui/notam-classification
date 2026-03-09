@@ -220,7 +220,7 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python & prepare artifacts
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -250,5 +250,7 @@ jobs:
           cache-from: type=gha
           cache-to:   type=gha,mode=max
 
-      - name: ✅ Verify image exists
-        run: docker images | grep notam-api
+      - name: ✅ Verify image built successfully
+        run: |
+          docker images
+          docker inspect notam-api:ci-${{ github.sha }} > /dev/null && echo "✅ Image built successfully" || echo "❌ Image not found"

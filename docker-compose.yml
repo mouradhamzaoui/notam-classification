@@ -3,7 +3,6 @@
 # Services : postgres · mlflow · api · (react à venir)
 # ══════════════════════════════════════════════════════════
 
-version: "3.9"
 
 # ── Réseau interne ────────────────────────────────────────
 networks:
