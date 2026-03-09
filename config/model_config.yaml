@@ -1,0 +1,71 @@
+# ══════════════════════════════════════════════════════════
+# Configuration des modèles et hyperparamètres
+# ══════════════════════════════════════════════════════════
+
+candidates:
+  logistic_regression:
+    class: "LogisticRegression"
+    enabled: true
+    params:
+      C: 5.0
+      solver: "saga"
+      max_iter: 1000
+      class_weight: "balanced"
+    grid_search:
+      C: [0.1, 1.0, 5.0, 10.0]
+
+  linear_svc:
+    class: "LinearSVC"
+    enabled: true
+    params:
+      C: 1.0
+      max_iter: 2000
+      class_weight: "balanced"
+    grid_search:
+      C: [0.01, 0.1, 1.0, 5.0, 10.0]
+
+  random_forest:
+    class: "RandomForestClassifier"
+    enabled: true
+    params:
+      n_estimators: 200
+      max_features: "sqrt"
+      class_weight: "balanced"
+      random_state: 42
+    grid_search:
+      n_estimators: [100, 200]
+      max_depth: [null, 20, 50]
+
+# ── Catégories ICAO ───────────────────────────────────────
+categories:
+  RUNWAY_CLOSURE:
+    priority: "CRITICAL"
+    color: "#ef4444"
+    icon: "🛬"
+  NAVIGATION_AID:
+    priority: "HIGH"
+    color: "#3b82f6"
+    icon: "📡"
+  AIRSPACE_RESTRICTION:
+    priority: "CRITICAL"
+    color: "#f59e0b"
+    icon: "🚫"
+  LIGHTING:
+    priority: "MEDIUM"
+    color: "#8b5cf6"
+    icon: "💡"
+  OBSTACLE:
+    priority: "HIGH"
+    color: "#10b981"
+    icon: "🏗️"
+  AERODROME_PROCEDURE:
+    priority: "LOW"
+    color: "#ec4899"
+    icon: "📋"
+
+# ── Seuils de performance ─────────────────────────────────
+thresholds:
+  min_f1_macro:      0.85
+  min_recall:        0.80
+  min_confidence:    0.60
+  drift_psi_alert:   0.20

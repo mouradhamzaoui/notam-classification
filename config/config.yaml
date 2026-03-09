@@ -1,0 +1,72 @@
+# ══════════════════════════════════════════════════════════
+# Configuration globale — NOTAM Classification System
+# ══════════════════════════════════════════════════════════
+
+project:
+  name: "notam-classification"
+  version: "1.0.0"
+  description: "Automatic NOTAM Classification System"
+  author: "MLOps Team"
+
+# ── Données ───────────────────────────────────────────────
+data:
+  raw_path:        "data/raw/notams.csv"
+  processed_path:  "data/processed/notams_clean.csv"
+  splits_path:     "data/processed/train_test_splits.pkl"
+  text_col:        "body_text"
+  label_col:       "category"
+  test_size:       0.20
+  random_state:    42
+
+# ── Features ──────────────────────────────────────────────
+features:
+  tfidf_max_features:  5000
+  ngram_range:         [1, 2]
+  use_stemming:        true
+  meta_features:
+    - char_count
+    - word_count
+    - upper_ratio
+    - digit_ratio
+    - slash_count
+    - has_time_pattern
+    - has_coordinates
+
+# ── Modèle ────────────────────────────────────────────────
+model:
+  name:         "LinearSVC"
+  best_C:       1.0
+  max_iter:     2000
+  calibration:  "sigmoid"
+  cv_folds:     5
+  scoring:      "f1_macro"
+  artifacts_dir: "data/processed/models"
+
+# ── MLflow ────────────────────────────────────────────────
+mlflow:
+  experiment_name:  "notam-classification"
+  tracking_uri:     "http://localhost:5000"
+  registered_model: "notam-classifier"
+  artifact_location: "mlruns"
+
+# ── API ───────────────────────────────────────────────────
+api:
+  host:     "0.0.0.0"
+  port:     8000
+  version:  "v1"
+  prefix:   "/api/v1"
+  reload:   true
+
+# ── Logging ───────────────────────────────────────────────
+logging:
+  level:   "INFO"
+  format:  "rich"
+  log_dir: "logs"
+
+# ── Database ──────────────────────────────────────────────
+database:
+  host:     "localhost"
+  port:     5432
+  name:     "notam_db"
+  user:     "notam_user"
+  password: "notam_pass"

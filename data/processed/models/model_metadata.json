@@ -1,0 +1,19 @@
+{
+  "model_name": "LinearSVC_Default",
+  "params": "{'C': 1.0}",
+  "metrics": {
+    "test_f1_macro": 1.0,
+    "test_accuracy": 1.0,
+    "cv_f1_mean": 0.919380244088482,
+    "cv_f1_std": 0.05196998276088115
+  },
+  "classes": [
+    "AERODROME_PROCEDURE",
+    "AIRSPACE_RESTRICTION",
+    "LIGHTING",
+    "NAVIGATION_AID",
+    "OBSTACLE",
+    "RUNWAY_CLOSURE"
+  ],
+  "train_time_s": 1.1423628330230713
+}
