@@ -92,6 +92,7 @@ jobs:
             --cov=src \
             --cov-report=xml:coverage-unit.xml \
             --cov-report=term-missing \
+            --no-cov-on-fail \
             -m "unit"
 
       - name: 📊 Upload unit coverage
@@ -142,6 +143,7 @@ jobs:
             --tb=short \
             --cov=src \
             --cov-report=xml:coverage-integration.xml \
+            --no-cov-on-fail \
             -m "integration"
 
       - name: 📊 Upload integration coverage
