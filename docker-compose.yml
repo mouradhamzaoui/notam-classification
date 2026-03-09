@@ -1,0 +1,107 @@
+# ══════════════════════════════════════════════════════════
+# docker-compose.yml — NOTAM Classification System
+# Services : postgres · mlflow · api · (react à venir)
+# ══════════════════════════════════════════════════════════
+
+version: "3.9"
+
+# ── Réseau interne ────────────────────────────────────────
+networks:
+  notam_network:
+    driver: bridge
+    name: notam_network
+
+# ── Volumes persistants ───────────────────────────────────
+volumes:
+  postgres_data:
+    name: notam_postgres_data
+  mlflow_artifacts:
+    name: notam_mlflow_artifacts
+  model_artifacts:
+    name: notam_model_artifacts
+
+# ══════════════════════════════════════════════════════════
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: notam_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       notam_db
+      POSTGRES_USER:     notam_user
+      POSTGRES_PASSWORD: notam_pass
+      PGDATA:            /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - notam_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notam_user -d notam_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── MLflow Tracking Server ─────────────────────────────
+  mlflow:
+    build:
+      context: .
+      dockerfile: docker/mlflow/Dockerfile
+    container_name: notam_mlflow
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MLFLOW_BACKEND_STORE_URI: postgresql://notam_user:notam_pass@postgres:5432/notam_db
+      MLFLOW_ARTIFACT_ROOT:     /mlflow/artifacts
+    volumes:
+      - mlflow_artifacts:/mlflow/artifacts
+    ports:
+      - "5000:5000"
+    networks:
+      - notam_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ── FastAPI ────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    container_name: notam_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    environment:
+      NOTAM_DB_HOST:     postgres
+      NOTAM_DB_PORT:     "5432"
+      NOTAM_DB_NAME:     notam_db
+      NOTAM_DB_USER:     notam_user
+      NOTAM_DB_PASSWORD: notam_pass
+      NOTAM_MLFLOW_URI:  http://mlflow:5000
+      PYTHONPATH:        /app
+    volumes:
+      - model_artifacts:/app/data/processed
+    ports:
+      - "8000:8000"
+    networks:
+      - notam_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
