@@ -108,3 +108,17 @@
 2026-03-08 21:09:41 | INFO     | src.api.routers.classify | [API] Batch: 3 NOTAMs classified in 58.2ms
 2026-03-08 21:09:41 | INFO     | src.api.routers.classify | [API] Batch: 2 NOTAMs classified in 35.0ms
 2026-03-08 21:09:41 | INFO     | src.api.main | [Shutdown] API shutting down...
+2026-03-08 21:21:18 | INFO     | src.api.main | =======================================================
+2026-03-08 21:21:18 | INFO     | src.api.main |   🚀 Starting notam-classification API v1.0.0
+2026-03-08 21:21:18 | INFO     | src.api.main | =======================================================
+2026-03-08 21:21:18 | INFO     | src.pipeline.inference_pipeline | [Inference] Loading artifacts...
+2026-03-08 21:21:18 | INFO     | src.pipeline.inference_pipeline | [Inference] ✅ Ready | Classes: ['AERODROME_PROCEDURE', 'AIRSPACE_RESTRICTION', 'LIGHTING', 'NAVIGATION_AID', 'OBSTACLE', 'RUNWAY_CLOSURE']
+2026-03-08 21:21:18 | WARNING  | src.tracking.database | [DB] PostgreSQL unavailable ('utf-8' codec can't decode byte 0xe9 in position 103: invalid continuation byte), falling back to SQLite
+2026-03-08 21:21:18 | INFO     | src.tracking.database | [DB] ✅ Connected to SQLite → data\processed\notam_dev.db
+2026-03-08 21:21:18 | INFO     | src.tracking.database | [DB] Tables initialized
+2026-03-08 21:21:18 | INFO     | src.api.main | [Startup] ✅ Model and DB loaded
+2026-03-08 21:21:18 | WARNING  | src.api.routers.classify | [API] Low confidence: 59.34% < 60% for text: ILS RWY 28R NOT AVAILABLE...
+2026-03-08 21:21:18 | INFO     | src.api.routers.classify | [API] Batch: 3 NOTAMs classified in 61.4ms
+2026-03-08 21:21:18 | INFO     | src.api.routers.classify | [API] Batch: 3 NOTAMs classified in 62.8ms
+2026-03-08 21:21:18 | INFO     | src.api.routers.classify | [API] Batch: 2 NOTAMs classified in 41.2ms
+2026-03-08 21:21:19 | INFO     | src.api.main | [Shutdown] API shutting down...

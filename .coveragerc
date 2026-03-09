@@ -1,0 +1,17 @@
+[run]
+source = src
+omit =
+    src/models/train.py
+    src/models/evaluate.py
+    src/pipeline/training_pipeline.py
+    src/tracking/mlflow_tracker.py
+    src/api/main.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    pass
+    except ImportError
