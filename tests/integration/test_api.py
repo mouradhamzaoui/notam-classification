@@ -8,17 +8,16 @@ from fastapi.testclient import TestClient
 
 @pytest.mark.integration
 class TestHealthEndpoints:
-
     def test_health_check_200(self, test_client: TestClient):
         response = test_client.get("/api/v1/health")
         assert response.status_code == 200
 
     def test_health_response_schema(self, test_client: TestClient):
         data = test_client.get("/api/v1/health").json()
-        assert "status"       in data
-        assert "version"      in data
+        assert "status" in data
+        assert "version" in data
         assert "model_loaded" in data
-        assert "uptime_s"     in data
+        assert "uptime_s" in data
 
     def test_root_endpoint(self, test_client: TestClient):
         response = test_client.get("/")
@@ -34,7 +33,6 @@ class TestHealthEndpoints:
 
 @pytest.mark.integration
 class TestClassifyEndpoint:
-
     def test_classify_valid_notam(self, test_client: TestClient):
         response = test_client.post(
             "/api/v1/classify",
@@ -47,11 +45,11 @@ class TestClassifyEndpoint:
             "/api/v1/classify",
             json={"text": "ILS RWY 28R NOT AVAILABLE"},
         ).json()
-        assert "category"      in data
-        assert "confidence"    in data
+        assert "category" in data
+        assert "confidence" in data
         assert "probabilities" in data
-        assert "latency_ms"    in data
-        assert "priority"      in data
+        assert "latency_ms" in data
+        assert "priority" in data
 
     def test_classify_confidence_range(self, test_client: TestClient):
         data = test_client.post(
@@ -61,7 +59,7 @@ class TestClassifyEndpoint:
         assert 0.0 <= data["confidence"] <= 1.0
 
     def test_classify_probabilities_sum_to_one(self, test_client: TestClient):
-        data  = test_client.post(
+        data = test_client.post(
             "/api/v1/classify",
             json={"text": "RWY 10L CLSD"},
         ).json()
@@ -70,8 +68,12 @@ class TestClassifyEndpoint:
 
     def test_classify_category_is_valid(self, test_client: TestClient):
         valid_categories = {
-            "RUNWAY_CLOSURE", "NAVIGATION_AID", "AIRSPACE_RESTRICTION",
-            "LIGHTING", "OBSTACLE", "AERODROME_PROCEDURE",
+            "RUNWAY_CLOSURE",
+            "NAVIGATION_AID",
+            "AIRSPACE_RESTRICTION",
+            "LIGHTING",
+            "OBSTACLE",
+            "AERODROME_PROCEDURE",
         }
         data = test_client.post(
             "/api/v1/classify",
@@ -95,30 +97,29 @@ class TestClassifyEndpoint:
 
     def test_classify_text_uppercased(self, test_client: TestClient):
         """Vérifie que le texte est normalisé en majuscules."""
-        r1 = test_client.post("/api/v1/classify",
-                              json={"text": "rwy 28l clsd"}).json()
-        r2 = test_client.post("/api/v1/classify",
-                              json={"text": "RWY 28L CLSD"}).json()
+        r1 = test_client.post("/api/v1/classify", json={"text": "rwy 28l clsd"}).json()
+        r2 = test_client.post("/api/v1/classify", json={"text": "RWY 28L CLSD"}).json()
         assert r1["category"] == r2["category"]
 
 
 @pytest.mark.integration
 class TestBatchClassifyEndpoint:
-
     def test_batch_valid(self, test_client: TestClient):
         response = test_client.post(
             "/api/v1/classify/batch",
-            json={"texts": [
-                "RWY 10L CLSD DUE TO MAINTENANCE",
-                "ILS RWY 28R NOT AVAILABLE",
-                "PAPI RWY 18 OTS",
-            ]},
+            json={
+                "texts": [
+                    "RWY 10L CLSD DUE TO MAINTENANCE",
+                    "ILS RWY 28R NOT AVAILABLE",
+                    "PAPI RWY 18 OTS",
+                ]
+            },
         )
         assert response.status_code == 200
 
     def test_batch_response_count(self, test_client: TestClient):
         texts = ["RWY CLSD", "ILS OTS", "RESTRICTED AREA ACTIVE"]
-        data  = test_client.post(
+        data = test_client.post(
             "/api/v1/classify/batch",
             json={"texts": texts},
         ).json()
@@ -141,7 +142,7 @@ class TestBatchClassifyEndpoint:
         assert response.status_code == 422
 
     def test_batch_over_limit_rejected(self, test_client: TestClient):
-        texts    = ["RWY CLSD"] * 101
+        texts = ["RWY CLSD"] * 101
         response = test_client.post(
             "/api/v1/classify/batch",
             json={"texts": texts},
@@ -151,7 +152,6 @@ class TestBatchClassifyEndpoint:
 
 @pytest.mark.integration
 class TestMonitoringEndpoints:
-
     def test_predictions_endpoint(self, test_client: TestClient):
         response = test_client.get("/api/v1/monitoring/predictions")
         assert response.status_code == 200

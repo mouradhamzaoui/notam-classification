@@ -4,18 +4,18 @@ Responsabilité unique : charger et valider le dataset NOTAM.
 """
 
 from pathlib import Path
-import pandas as pd
-import numpy as np
 
+import numpy as np
+import pandas as pd
 
 # ── Constantes ────────────────────────────────────────────────────────────────
-RAW_PATH       = Path("data/raw/notams.csv")
+RAW_PATH = Path("data/raw/notams.csv")
 PROCESSED_PATH = Path("data/processed/notams_clean.csv")
 
-LABEL_COL   = "category"
-TEXT_COL    = "body_text"
-ICAO_COL    = "icao_location"
-QCODE_COL   = "q_code"
+LABEL_COL = "category"
+TEXT_COL = "body_text"
+ICAO_COL = "icao_location"
+QCODE_COL = "q_code"
 
 CATEGORIES = [
     "RUNWAY_CLOSURE",
@@ -46,10 +46,10 @@ class NOTAMDataLoader:
         test_size: float = 0.20,
         random_state: int = 42,
     ):
-        self.path         = Path(path)
-        self.label_col    = label_col
-        self.text_col     = text_col
-        self.test_size    = test_size
+        self.path = Path(path)
+        self.label_col = label_col
+        self.text_col = text_col
+        self.test_size = test_size
         self.random_state = random_state
 
     # ── Public API ────────────────────────────────────────────────────────────
@@ -81,7 +81,8 @@ class NOTAMDataLoader:
         y = df[self.label_col]
 
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y,
+            X,
+            y,
             test_size=self.test_size,
             stratify=y,
             random_state=self.random_state,
@@ -116,12 +117,12 @@ class NOTAMDataLoader:
     def _add_meta_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Ajoute des features numériques dérivées du texte brut."""
         t = df[self.text_col].astype(str)
-        df["char_count"]      = t.str.len()
-        df["word_count"]      = t.str.split().str.len()
-        df["upper_ratio"]     = t.apply(lambda s: sum(c.isupper() for c in s) / max(len(s), 1))
-        df["digit_ratio"]     = t.apply(lambda s: sum(c.isdigit() for c in s) / max(len(s), 1))
-        df["slash_count"]     = t.str.count(r"/")
-        df["has_time_pattern"]= t.str.contains(r"\b\d{4}Z?\b", regex=True).astype(int)
+        df["char_count"] = t.str.len()
+        df["word_count"] = t.str.split().str.len()
+        df["upper_ratio"] = t.apply(lambda s: sum(c.isupper() for c in s) / max(len(s), 1))
+        df["digit_ratio"] = t.apply(lambda s: sum(c.isdigit() for c in s) / max(len(s), 1))
+        df["slash_count"] = t.str.count(r"/")
+        df["has_time_pattern"] = t.str.contains(r"\b\d{4}Z?\b", regex=True).astype(int)
         df["has_coordinates"] = t.str.contains(r"\d{4}[NS]\d{5}[EW]", regex=True).astype(int)
-        df["q_prefix"]        = df[QCODE_COL].str[:2] if QCODE_COL in df.columns else "QX"
+        df["q_prefix"] = df[QCODE_COL].str[:2] if QCODE_COL in df.columns else "QX"
         return df

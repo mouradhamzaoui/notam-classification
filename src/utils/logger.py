@@ -6,22 +6,24 @@ et rotation des fichiers de logs.
 
 import logging
 import sys
-from pathlib import Path
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
 
 # ── Thème Rich ────────────────────────────────────────────────────────────────
-RICH_THEME = Theme({
-    "info":     "cyan",
-    "warning":  "yellow bold",
-    "error":    "red bold",
-    "critical": "red bold reverse",
-    "success":  "green bold",
-})
+RICH_THEME = Theme(
+    {
+        "info": "cyan",
+        "warning": "yellow bold",
+        "error": "red bold",
+        "critical": "red bold reverse",
+        "success": "green bold",
+    }
+)
 
 console = Console(theme=RICH_THEME)
 
@@ -70,15 +72,17 @@ def get_logger(
 
         file_handler = RotatingFileHandler(
             log_file,
-            maxBytes=10 * 1024 * 1024,   # 10 MB
+            maxBytes=10 * 1024 * 1024,  # 10 MB
             backupCount=5,
             encoding="utf-8",
         )
         file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(
-            fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        ))
+        file_handler.setFormatter(
+            logging.Formatter(
+                fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+        )
         logger.addHandler(file_handler)
 
     logger.propagate = False

@@ -12,38 +12,60 @@ Justifications mathématiques incluses dans les docstrings.
 """
 
 import re
-import numpy as np
-import pandas as pd
 from pathlib import Path
 
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.preprocessing import (
-    LabelEncoder,
-    StandardScaler,
-    OneHotEncoder,
-    FunctionTransformer,
-)
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.base import BaseEstimator, TransformerMixin
-from scipy.sparse import hstack, issparse
 import nltk
+import numpy as np
+import pandas as pd
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+from scipy.sparse import hstack, issparse
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.preprocessing import (
+    FunctionTransformer,
+    LabelEncoder,
+    OneHotEncoder,
+    StandardScaler,
+)
 
 nltk.download("stopwords", quiet=True)
-nltk.download("punkt",     quiet=True)
+nltk.download("punkt", quiet=True)
 nltk.download("punkt_tab", quiet=True)
 
 # ── Constantes ────────────────────────────────────────────────────────────────
 AVIATION_STOPWORDS = set(stopwords.words("english")) | {
-    "rwy", "twy", "apt", "acft", "notam", "notamn", "avbl",
-    "effective", "clsd", "due", "will", "not", "auth",
-    "ots", "opr", "ops", "flt", "info", "ppr", "req",
+    "rwy",
+    "twy",
+    "apt",
+    "acft",
+    "notam",
+    "notamn",
+    "avbl",
+    "effective",
+    "clsd",
+    "due",
+    "will",
+    "not",
+    "auth",
+    "ots",
+    "opr",
+    "ops",
+    "flt",
+    "info",
+    "ppr",
+    "req",
 }
 
 META_FEATURES = [
-    "char_count", "word_count", "upper_ratio",
-    "digit_ratio", "slash_count", "has_time_pattern", "has_coordinates",
+    "char_count",
+    "word_count",
+    "upper_ratio",
+    "digit_ratio",
+    "slash_count",
+    "has_time_pattern",
+    "has_coordinates",
 ]
 
 
@@ -76,13 +98,13 @@ class TFIDFStrategy:
         self.vectorizer = TfidfVectorizer(
             max_features=max_features,
             ngram_range=ngram_range,
-            sublinear_tf=True,               # log-normalization TF
+            sublinear_tf=True,  # log-normalization TF
             strip_accents="unicode",
             analyzer="word",
             stop_words=list(AVIATION_STOPWORDS),
-            min_df=2,                         # ignore les hapax
-            max_df=0.95,                      # ignore les quasi-ubiquitaires
-            norm="l2",                        # normalisation L2 par doc
+            min_df=2,  # ignore les hapax
+            max_df=0.95,  # ignore les quasi-ubiquitaires
+            norm="l2",  # normalisation L2 par doc
         )
 
     def fit(self, X_text: pd.Series):
@@ -126,8 +148,8 @@ class NOTAMTextPreprocessor(BaseEstimator, TransformerMixin):
 
     def _preprocess(self, text: str) -> str:
         text = str(text).lower()
-        text = re.sub(r"\b\d+[\w./]*", "", text)   # supprime nombres/codes
-        text = re.sub(r"[^a-z\s]", " ", text)       # garde lettres seulement
+        text = re.sub(r"\b\d+[\w./]*", "", text)  # supprime nombres/codes
+        text = re.sub(r"[^a-z\s]", " ", text)  # garde lettres seulement
         tokens = text.split()
         tokens = [t for t in tokens if t not in AVIATION_STOPWORDS and len(t) > 2]
         if self.use_stemming:
@@ -188,13 +210,27 @@ class MetaFeatureExtractor(BaseEstimator, TransformerMixin):
             # Re-calcule les features manquantes si nécessaire
             t = X["body_text"].astype(str)
             for col in missing:
-                if col == "char_count":      X = X.copy(); X[col] = t.str.len()
-                if col == "word_count":      X = X.copy(); X[col] = t.str.split().str.len()
-                if col == "upper_ratio":     X = X.copy(); X[col] = t.apply(lambda s: sum(c.isupper() for c in s)/max(len(s),1))
-                if col == "digit_ratio":     X = X.copy(); X[col] = t.apply(lambda s: sum(c.isdigit() for c in s)/max(len(s),1))
-                if col == "slash_count":     X = X.copy(); X[col] = t.str.count("/")
-                if col == "has_time_pattern":X = X.copy(); X[col] = t.str.contains(r"\b\d{4}Z?\b").astype(int)
-                if col == "has_coordinates": X = X.copy(); X[col] = t.str.contains(r"\d{4}[NS]\d{5}[EW]").astype(int)
+                if col == "char_count":
+                    X = X.copy()
+                    X[col] = t.str.len()
+                if col == "word_count":
+                    X = X.copy()
+                    X[col] = t.str.split().str.len()
+                if col == "upper_ratio":
+                    X = X.copy()
+                    X[col] = t.apply(lambda s: sum(c.isupper() for c in s) / max(len(s), 1))
+                if col == "digit_ratio":
+                    X = X.copy()
+                    X[col] = t.apply(lambda s: sum(c.isdigit() for c in s) / max(len(s), 1))
+                if col == "slash_count":
+                    X = X.copy()
+                    X[col] = t.str.count("/")
+                if col == "has_time_pattern":
+                    X = X.copy()
+                    X[col] = t.str.contains(r"\b\d{4}Z?\b").astype(int)
+                if col == "has_coordinates":
+                    X = X.copy()
+                    X[col] = t.str.contains(r"\d{4}[NS]\d{5}[EW]").astype(int)
         return X[self.feature_cols].fillna(0)
 
 
@@ -221,10 +257,10 @@ class NOTAMFeaturePipeline:
 
     def __init__(self, max_tfidf_features: int = 5000):
         self.preprocessor = NOTAMTextPreprocessor(use_stemming=True)
-        self.tfidf         = TFIDFStrategy(max_features=max_tfidf_features)
-        self.meta          = MetaFeatureExtractor()
+        self.tfidf = TFIDFStrategy(max_features=max_tfidf_features)
+        self.meta = MetaFeatureExtractor()
         self.label_encoder = LabelEncoder()
-        self._fitted       = False
+        self._fitted = False
 
     def fit(self, X: pd.DataFrame, y: pd.Series):
         text_clean = self.preprocessor.fit_transform(X)
@@ -232,19 +268,22 @@ class NOTAMFeaturePipeline:
         self.meta.fit(X)
         self.label_encoder.fit(y)
         self._fitted = True
-        print(f"[Pipeline] ✅ Fitted | TF-IDF vocab: {len(self.tfidf.feature_names):,} "
-              f"| Meta features: {len(self.meta.feature_cols)} "
-              f"| Classes: {list(self.label_encoder.classes_)}")
+        print(
+            f"[Pipeline] ✅ Fitted | TF-IDF vocab: {len(self.tfidf.feature_names):,} "
+            f"| Meta features: {len(self.meta.feature_cols)} "
+            f"| Classes: {list(self.label_encoder.classes_)}"
+        )
         return self
 
     def transform(self, X: pd.DataFrame):
         if not self._fitted:
             raise RuntimeError("Pipeline not fitted. Call .fit() first.")
-        text_clean  = self.preprocessor.transform(X)
-        X_tfidf     = self.tfidf.transform(text_clean)
-        X_meta      = self.meta.transform(X)
+        text_clean = self.preprocessor.transform(X)
+        X_tfidf = self.tfidf.transform(text_clean)
+        X_meta = self.meta.transform(X)
         from scipy.sparse import csr_matrix
-        X_meta_sp   = csr_matrix(X_meta)
+
+        X_meta_sp = csr_matrix(X_meta)
         return hstack([X_tfidf, X_meta_sp])
 
     def fit_transform(self, X: pd.DataFrame, y: pd.Series):
@@ -262,6 +301,7 @@ class NOTAMFeaturePipeline:
 
     def save(self, path: str = "data/processed/feature_pipeline.pkl"):
         import joblib
+
         Path(path).parent.mkdir(exist_ok=True)
         joblib.dump(self, path)
         print(f"[Pipeline] 💾 Saved to {path}")
@@ -269,6 +309,7 @@ class NOTAMFeaturePipeline:
     @classmethod
     def load(cls, path: str = "data/processed/feature_pipeline.pkl"):
         import joblib
+
         obj = joblib.load(path)
         print(f"[Pipeline] 📂 Loaded from {path}")
         return obj

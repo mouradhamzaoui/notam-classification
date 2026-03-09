@@ -5,14 +5,17 @@ Endpoints de classification NOTAM.
 
 import time
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.api.dependencies import get_config, get_db, get_inference_pipeline
 from src.api.schemas import (
-    ClassifyRequest, ClassifyResponse,
-    BatchClassifyRequest, BatchClassifyResponse,
+    BatchClassifyRequest,
+    BatchClassifyResponse,
+    ClassifyRequest,
+    ClassifyResponse,
     FeedbackRequest,
 )
-from src.api.dependencies import get_inference_pipeline, get_db, get_config
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -37,10 +40,10 @@ Classifie un NOTAM texte brut vers une catégorie ICAO.
     """,
 )
 async def classify_notam(
-    request:  ClassifyRequest,
-    pipeline = Depends(get_inference_pipeline),
-    db       = Depends(get_db),
-    cfg      = Depends(get_config),
+    request: ClassifyRequest,
+    pipeline=Depends(get_inference_pipeline),
+    db=Depends(get_db),
+    cfg=Depends(get_config),
 ):
     try:
         result = pipeline.predict(request.text)
@@ -66,13 +69,13 @@ async def classify_notam(
         )
 
     return ClassifyResponse(
-        category      = result.category,
-        confidence    = result.confidence,
-        probabilities = result.probabilities,
-        latency_ms    = result.latency_ms,
-        priority      = result.meta.get("priority", "UNKNOWN"),
-        icon          = result.meta.get("icon", "✈️"),
-        model_version = request.model_version,
+        category=result.category,
+        confidence=result.confidence,
+        probabilities=result.probabilities,
+        latency_ms=result.latency_ms,
+        priority=result.meta.get("priority", "UNKNOWN"),
+        icon=result.meta.get("icon", "✈️"),
+        model_version=request.model_version,
     )
 
 
@@ -84,9 +87,9 @@ async def classify_notam(
     description="Classifie une liste de NOTAMs en une seule requête (max 100).",
 )
 async def batch_classify(
-    request:  BatchClassifyRequest,
-    pipeline = Depends(get_inference_pipeline),
-    db       = Depends(get_db),
+    request: BatchClassifyRequest,
+    pipeline=Depends(get_inference_pipeline),
+    db=Depends(get_db),
 ):
     if len(request.texts) > 100:
         raise HTTPException(
@@ -112,26 +115,25 @@ async def batch_classify(
         except Exception:
             pass
 
-        responses.append(ClassifyResponse(
-            category      = result.category,
-            confidence    = result.confidence,
-            probabilities = result.probabilities,
-            latency_ms    = result.latency_ms,
-            priority      = result.meta.get("priority", "UNKNOWN"),
-            icon          = result.meta.get("icon", "✈️"),
-            model_version = request.model_version,
-        ))
+        responses.append(
+            ClassifyResponse(
+                category=result.category,
+                confidence=result.confidence,
+                probabilities=result.probabilities,
+                latency_ms=result.latency_ms,
+                priority=result.meta.get("priority", "UNKNOWN"),
+                icon=result.meta.get("icon", "✈️"),
+                model_version=request.model_version,
+            )
+        )
 
     duration_ms = (time.time() - t0) * 1000
-    logger.info(
-        f"[API] Batch: {len(results)} NOTAMs classified "
-        f"in {duration_ms:.1f}ms"
-    )
+    logger.info(f"[API] Batch: {len(results)} NOTAMs classified in {duration_ms:.1f}ms")
 
     return BatchClassifyResponse(
-        results     = responses,
-        total       = len(responses),
-        duration_ms = duration_ms,
+        results=responses,
+        total=len(responses),
+        duration_ms=duration_ms,
     )
 
 
@@ -143,14 +145,17 @@ async def batch_classify(
 )
 async def submit_feedback(
     request: FeedbackRequest,
-    db      = Depends(get_db),
+    db=Depends(get_db),
 ):
     try:
         with db.session() as session:
             from src.tracking.database import PredictionLog
-            log = session.query(PredictionLog).filter(
-                PredictionLog.id == request.prediction_id
-            ).first()
+
+            log = (
+                session.query(PredictionLog)
+                .filter(PredictionLog.id == request.prediction_id)
+                .first()
+            )
 
             if not log:
                 raise HTTPException(
@@ -159,12 +164,12 @@ async def submit_feedback(
                 )
 
             log.true_label = request.true_label
-            log.is_correct = (log.predicted == request.true_label)
+            log.is_correct = log.predicted == request.true_label
             session.commit()
 
         return {
-            "message":    "Feedback enregistré",
-            "id":         request.prediction_id,
+            "message": "Feedback enregistré",
+            "id": request.prediction_id,
             "is_correct": log.is_correct,
         }
     except HTTPException:

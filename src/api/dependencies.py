@@ -4,12 +4,13 @@ Dépendances FastAPI injectables (Dependency Injection pattern).
 """
 
 from __future__ import annotations
+
 from functools import lru_cache
 
-from src.utils.config import Config
-from src.utils.logger import get_logger
 from src.pipeline.inference_pipeline import InferencePipeline
 from src.tracking.database import DatabaseManager
+from src.utils.config import Config
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

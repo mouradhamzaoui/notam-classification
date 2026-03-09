@@ -5,6 +5,7 @@ Pattern Singleton pour éviter les relectures multiples du fichier.
 """
 
 from __future__ import annotations
+
 import os
 from pathlib import Path
 from typing import Any
@@ -20,9 +21,9 @@ logger = get_logger(__name__)
 load_dotenv()
 
 # ── Chemins par défaut ────────────────────────────────────────────────────────
-CONFIG_DIR       = Path(__file__).parent.parent.parent / "config"
+CONFIG_DIR = Path(__file__).parent.parent.parent / "config"
 MAIN_CONFIG_PATH = CONFIG_DIR / "config.yaml"
-MODEL_CONFIG_PATH= CONFIG_DIR / "model_config.yaml"
+MODEL_CONFIG_PATH = CONFIG_DIR / "model_config.yaml"
 
 
 class Config:
@@ -40,7 +41,7 @@ class Config:
     """
 
     _instance: Config | None = None
-    _raw:      dict           = {}
+    _raw: dict = {}
 
     def __new__(cls) -> Config:
         if cls._instance is None:
@@ -60,7 +61,7 @@ class Config:
     # ── Chargement ────────────────────────────────────────────────────────────
 
     def _load(self):
-        main  = self._read_yaml(MAIN_CONFIG_PATH)
+        main = self._read_yaml(MAIN_CONFIG_PATH)
         model = self._read_yaml(MODEL_CONFIG_PATH)
         self._raw = {**main, "model_config": model}
         self._override_from_env()
@@ -71,7 +72,7 @@ class Config:
         if not path.exists():
             logger.warning(f"Config file not found: {path}")
             return {}
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
 
     def _override_from_env(self):
@@ -80,12 +81,12 @@ class Config:
         Ex: NOTAM_DB_PASSWORD → database.password
         """
         env_map = {
-            "NOTAM_DB_HOST":     ("database", "host"),
-            "NOTAM_DB_PORT":     ("database", "port"),
-            "NOTAM_DB_NAME":     ("database", "name"),
-            "NOTAM_DB_USER":     ("database", "user"),
+            "NOTAM_DB_HOST": ("database", "host"),
+            "NOTAM_DB_PORT": ("database", "port"),
+            "NOTAM_DB_NAME": ("database", "name"),
+            "NOTAM_DB_USER": ("database", "user"),
             "NOTAM_DB_PASSWORD": ("database", "password"),
-            "NOTAM_MLFLOW_URI":  ("mlflow",   "tracking_uri"),
+            "NOTAM_MLFLOW_URI": ("mlflow", "tracking_uri"),
         }
         for env_key, (section, key) in env_map.items():
             val = os.getenv(env_key)
@@ -95,28 +96,36 @@ class Config:
     # ── Accesseurs typés ──────────────────────────────────────────────────────
 
     @property
-    def project(self)  -> _Section: return _Section(self._raw.get("project", {}))
+    def project(self) -> _Section:
+        return _Section(self._raw.get("project", {}))
 
     @property
-    def data(self)     -> _Section: return _Section(self._raw.get("data", {}))
+    def data(self) -> _Section:
+        return _Section(self._raw.get("data", {}))
 
     @property
-    def features(self) -> _Section: return _Section(self._raw.get("features", {}))
+    def features(self) -> _Section:
+        return _Section(self._raw.get("features", {}))
 
     @property
-    def model(self)    -> _Section: return _Section(self._raw.get("model", {}))
+    def model(self) -> _Section:
+        return _Section(self._raw.get("model", {}))
 
     @property
-    def mlflow(self)   -> _Section: return _Section(self._raw.get("mlflow", {}))
+    def mlflow(self) -> _Section:
+        return _Section(self._raw.get("mlflow", {}))
 
     @property
-    def api(self)      -> _Section: return _Section(self._raw.get("api", {}))
+    def api(self) -> _Section:
+        return _Section(self._raw.get("api", {}))
 
     @property
-    def logging(self)  -> _Section: return _Section(self._raw.get("logging", {}))
+    def logging(self) -> _Section:
+        return _Section(self._raw.get("logging", {}))
 
     @property
-    def database(self) -> _Section: return _Section(self._raw.get("database", {}))
+    def database(self) -> _Section:
+        return _Section(self._raw.get("database", {}))
 
     @property
     def categories(self) -> dict:
@@ -133,11 +142,11 @@ class Config:
     def get_db_url(self) -> str:
         db = self._raw.get("database", {})
         return (
-            f"postgresql://{db.get('user','notam_user')}:"
-            f"{db.get('password','notam_pass')}@"
-            f"{db.get('host','localhost')}:"
-            f"{db.get('port',5432)}/"
-            f"{db.get('name','notam_db')}"
+            f"postgresql://{db.get('user', 'notam_user')}:"
+            f"{db.get('password', 'notam_pass')}@"
+            f"{db.get('host', 'localhost')}:"
+            f"{db.get('port', 5432)}/"
+            f"{db.get('name', 'notam_db')}"
         )
 
     def __repr__(self) -> str:

@@ -11,12 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
+from src.api.routers import classify, health, monitoring
 from src.utils.config import Config
 from src.utils.logger import get_logger
-from src.api.routers import classify, health, monitoring
 
 logger = get_logger(__name__)
-cfg    = Config.get()
+cfg = Config.get()
 
 
 # ── Lifespan (startup / shutdown) ─────────────────────────────────────────────
@@ -29,7 +29,8 @@ async def lifespan(app: FastAPI):
 
     # Pré-charge le modèle (évite la latence à la première requête)
     try:
-        from src.api.dependencies import get_inference_pipeline, get_db
+        from src.api.dependencies import get_db, get_inference_pipeline
+
         get_inference_pipeline()
         get_db()
         logger.info("[Startup] ✅ Model and DB loaded")
@@ -43,8 +44,8 @@ async def lifespan(app: FastAPI):
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title       = "NOTAM Classification API",
-    description = """
+    title="NOTAM Classification API",
+    description="""
 ## ✈️ Automatic NOTAM Classification System
 
 API de classification automatique des **NOTAMs (Notice to Air Missions)**
@@ -66,20 +67,20 @@ vers les catégories opérationnelles ICAO.
 - `GET  /api/v1/health` — État de l'API
 - `GET  /api/v1/monitoring/stats` — Statistiques des prédictions
     """,
-    version     = cfg.project.version,
-    lifespan    = lifespan,
-    docs_url    = "/docs",
-    redoc_url   = "/redoc",
-    openapi_url = "/openapi.json",
+    version=cfg.project.version,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
 )
 
 # ── Middlewares ───────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins     = ["*"],   # En prod : restreindre aux domaines autorisés
-    allow_credentials = True,
-    allow_methods     = ["*"],
-    allow_headers     = ["*"],
+    allow_origins=["*"],  # En prod : restreindre aux domaines autorisés
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
@@ -87,12 +88,11 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # ── Middleware de logging des requêtes ────────────────────────────────────────
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    t0       = time.time()
+    t0 = time.time()
     response = await call_next(request)
     duration = (time.time() - t0) * 1000
     logger.debug(
-        f"[API] {request.method} {request.url.path} "
-        f"→ {response.status_code} ({duration:.1f}ms)"
+        f"[API] {request.method} {request.url.path} → {response.status_code} ({duration:.1f}ms)"
     )
     return response
 
@@ -109,8 +109,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 PREFIX = cfg.api.prefix or "/api/v1"
-app.include_router(health.router,     prefix=PREFIX)
-app.include_router(classify.router,   prefix=PREFIX)
+app.include_router(health.router, prefix=PREFIX)
+app.include_router(classify.router, prefix=PREFIX)
 app.include_router(monitoring.router, prefix=PREFIX)
 
 
@@ -118,8 +118,8 @@ app.include_router(monitoring.router, prefix=PREFIX)
 @app.get("/", include_in_schema=False)
 async def root():
     return {
-        "name":    cfg.project.name,
+        "name": cfg.project.name,
         "version": cfg.project.version,
-        "docs":    "/docs",
-        "health":  f"{PREFIX}/health",
+        "docs": "/docs",
+        "health": f"{PREFIX}/health",
     }

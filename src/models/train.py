@@ -11,24 +11,24 @@ Justifications mathématiques dans les docstrings de chaque classe.
 """
 
 import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
 import joblib
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Any
-
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import LinearSVC
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.model_selection import cross_val_score, StratifiedKFold
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
-    classification_report,
-    f1_score,
     accuracy_score,
+    classification_report,
     confusion_matrix,
+    f1_score,
 )
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.svm import LinearSVC
 
 # ── Constantes ────────────────────────────────────────────────────────────────
 MODELS_DIR = Path("data/processed/models")
@@ -38,16 +38,16 @@ MODELS_DIR.mkdir(parents=True, exist_ok=True)
 # ── Dataclass résultat ────────────────────────────────────────────────────────
 @dataclass
 class TrainingResult:
-    model_name:    str
-    model:         Any
-    train_time_s:  float
-    cv_f1_mean:    float
-    cv_f1_std:     float
+    model_name: str
+    model: Any
+    train_time_s: float
+    cv_f1_mean: float
+    cv_f1_std: float
     test_f1_macro: float
     test_accuracy: float
-    report:        str
+    report: str
     confusion_mat: np.ndarray
-    params:        dict = field(default_factory=dict)
+    params: dict = field(default_factory=dict)
 
     def summary(self) -> str:
         return (
@@ -241,26 +241,32 @@ class NOTAMTrainer:
     def train_and_evaluate(
         self,
         model_wrapper,
-        X_train, y_train,
-        X_test,  y_test,
+        X_train,
+        y_train,
+        X_test,
+        y_test,
         classes: list,
     ) -> TrainingResult:
 
         name = model_wrapper.NAME
-        print(f"\n{'='*55}")
+        print(f"\n{'=' * 55}")
         print(f"  🚀 Training : {name}")
-        print(f"{'='*55}")
+        print(f"{'=' * 55}")
 
         # ── Cross-validation F1-macro ─────────────────────────────────────────
         print(f"  ⚙️  {self.cv_folds}-fold Stratified CV...")
         cv_scores = cross_val_score(
-            model_wrapper.model, X_train, y_train,
-            cv=self.cv, scoring="f1_macro", n_jobs=-1,
+            model_wrapper.model,
+            X_train,
+            y_train,
+            cv=self.cv,
+            scoring="f1_macro",
+            n_jobs=-1,
         )
         print(f"  CV F1-macro : {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
 
         # ── Entraînement final ────────────────────────────────────────────────
-        print(f"  📚 Final fit on full train set...")
+        print("  📚 Final fit on full train set...")
         t0 = time.time()
         model_wrapper.fit(X_train, y_train)
         train_time = time.time() - t0
@@ -268,29 +274,29 @@ class NOTAMTrainer:
 
         # ── Évaluation test ───────────────────────────────────────────────────
         y_pred = model_wrapper.predict(X_test)
-        test_f1  = f1_score(y_test, y_pred, average="macro")
+        test_f1 = f1_score(y_test, y_pred, average="macro")
         test_acc = accuracy_score(y_test, y_pred)
-        report   = classification_report(y_test, y_pred, target_names=classes)
-        cm       = confusion_matrix(y_test, y_pred)
+        report = classification_report(y_test, y_pred, target_names=classes)
+        cm = confusion_matrix(y_test, y_pred)
 
         result = TrainingResult(
-            model_name    = name,
-            model         = model_wrapper.model,
-            train_time_s  = train_time,
-            cv_f1_mean    = cv_scores.mean(),
-            cv_f1_std     = cv_scores.std(),
-            test_f1_macro = test_f1,
-            test_accuracy = test_acc,
-            report        = report,
-            confusion_mat = cm,
-            params        = model_wrapper.params,
+            model_name=name,
+            model=model_wrapper.model,
+            train_time_s=train_time,
+            cv_f1_mean=cv_scores.mean(),
+            cv_f1_std=cv_scores.std(),
+            test_f1_macro=test_f1,
+            test_accuracy=test_acc,
+            report=report,
+            confusion_mat=cm,
+            params=model_wrapper.params,
         )
 
         print(result.summary())
         self.results.append(result)
 
         # Sauvegarde individuelle
-        save_path = MODELS_DIR / f"{name.replace(' ', '_').replace('(','').replace(')','')}.pkl"
+        save_path = MODELS_DIR / f"{name.replace(' ', '_').replace('(', '').replace(')', '')}.pkl"
         joblib.dump(model_wrapper.model, save_path)
         print(f"  💾 Model saved → {save_path}")
 
@@ -301,11 +307,16 @@ class NOTAMTrainer:
         return max(self.results, key=lambda r: r.test_f1_macro)
 
     def comparison_dataframe(self) -> pd.DataFrame:
-        return pd.DataFrame([{
-            "Model":        r.model_name,
-            "CV F1-macro":  round(r.cv_f1_mean, 4),
-            "CV Std":       round(r.cv_f1_std, 4),
-            "Test F1-macro":round(r.test_f1_macro, 4),
-            "Test Accuracy":round(r.test_accuracy, 4),
-            "Train Time(s)":round(r.train_time_s, 2),
-        } for r in self.results]).sort_values("Test F1-macro", ascending=False)
+        return pd.DataFrame(
+            [
+                {
+                    "Model": r.model_name,
+                    "CV F1-macro": round(r.cv_f1_mean, 4),
+                    "CV Std": round(r.cv_f1_std, 4),
+                    "Test F1-macro": round(r.test_f1_macro, 4),
+                    "Test Accuracy": round(r.test_accuracy, 4),
+                    "Train Time(s)": round(r.train_time_s, 2),
+                }
+                for r in self.results
+            ]
+        ).sort_values("Test F1-macro", ascending=False)

@@ -5,27 +5,30 @@ Orchestre : chargement → features → entraînement → évaluation → sauveg
 """
 
 from __future__ import annotations
+
 import time
-import joblib
-import numpy as np
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
-from sklearn.svm import LinearSVC
+import joblib
+import numpy as np
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_val_score
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
-    f1_score, accuracy_score,
-    classification_report, confusion_matrix,
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
 )
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_val_score
+from sklearn.svm import LinearSVC
 
-from src.utils.config import Config
-from src.utils.logger import get_logger
 from src.data.data_loader import NOTAMDataLoader
 from src.features.feature_engineering import NOTAMFeaturePipeline
+from src.utils.config import Config
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -33,28 +36,29 @@ logger = get_logger(__name__)
 @dataclass
 class PipelineArtifacts:
     """Contient tous les artefacts produits par le pipeline d'entraînement."""
+
     feature_pipeline: Any
-    model:            Any
-    model_name:       str
-    params:           dict
-    metrics:          dict = field(default_factory=dict)
-    classes:          list = field(default_factory=list)
-    report:           str  = ""
-    confusion_mat:    Any  = None
-    train_time_s:     float = 0.0
+    model: Any
+    model_name: str
+    params: dict
+    metrics: dict = field(default_factory=dict)
+    classes: list = field(default_factory=list)
+    report: str = ""
+    confusion_mat: Any = None
+    train_time_s: float = 0.0
 
     def summary(self) -> str:
         m = self.metrics
         return (
-            f"\n{'═'*55}\n"
+            f"\n{'═' * 55}\n"
             f"  ✅ PIPELINE COMPLETE — {self.model_name}\n"
-            f"{'═'*55}\n"
+            f"{'═' * 55}\n"
             f"  CV  F1-macro  : {m.get('cv_f1_mean', 0):.4f} "
             f"± {m.get('cv_f1_std', 0):.4f}\n"
             f"  Test F1-macro : {m.get('test_f1_macro', 0):.4f}\n"
             f"  Test Accuracy : {m.get('test_accuracy', 0):.4f}\n"
             f"  Train time    : {self.train_time_s:.1f}s\n"
-            f"{'═'*55}"
+            f"{'═' * 55}"
         )
 
 
@@ -75,7 +79,7 @@ class TrainingPipeline:
     """
 
     def __init__(self, cfg: Config | None = None):
-        self.cfg       = cfg or Config.get()
+        self.cfg = cfg or Config.get()
         self.artifacts: PipelineArtifacts | None = None
         Path(self.cfg.model.artifacts_dir).mkdir(parents=True, exist_ok=True)
 
@@ -105,15 +109,15 @@ class TrainingPipeline:
 
         # 5. Save
         self.artifacts = PipelineArtifacts(
-            feature_pipeline = feat_pipeline,
-            model            = model,
-            model_name       = model_name,
-            params           = params,
-            metrics          = metrics,
-            classes          = list(feat_pipeline.label_encoder.classes_),
-            report           = report,
-            confusion_mat    = cm,
-            train_time_s     = train_time,
+            feature_pipeline=feat_pipeline,
+            model=model,
+            model_name=model_name,
+            params=params,
+            metrics=metrics,
+            classes=list(feat_pipeline.label_encoder.classes_),
+            report=report,
+            confusion_mat=cm,
+            train_time_s=train_time,
         )
         self._save_artifacts()
         logger.info(self.artifacts.summary())
@@ -124,32 +128,32 @@ class TrainingPipeline:
     def _load_data(self):
         logger.info("[Step 1/5] Loading data...")
         loader = NOTAMDataLoader(
-            path         = self.cfg.data.processed_path,
-            label_col    = self.cfg.data.label_col,
-            text_col     = self.cfg.data.text_col,
-            test_size    = self.cfg.data.test_size,
-            random_state = self.cfg.data.random_state,
+            path=self.cfg.data.processed_path,
+            label_col=self.cfg.data.label_col,
+            text_col=self.cfg.data.text_col,
+            test_size=self.cfg.data.test_size,
+            random_state=self.cfg.data.random_state,
         )
         df = loader.load()
         return loader.split(df)
 
     def _build_features(self, X_train, X_test, y_train, y_test):
         logger.info("[Step 2/5] Building features...")
-        pipeline = NOTAMFeaturePipeline(
-            max_tfidf_features=self.cfg.features.tfidf_max_features
-        )
+        pipeline = NOTAMFeaturePipeline(max_tfidf_features=self.cfg.features.tfidf_max_features)
         X_tr = pipeline.fit_transform(X_train, y_train)
         X_te = pipeline.transform(X_test)
         y_tr = pipeline.encode_labels(y_train)
         y_te = pipeline.encode_labels(y_test)
-        logger.info(f"[Features] Shape: {X_tr.shape} | Classes: {list(pipeline.label_encoder.classes_)}")
+        logger.info(
+            f"[Features] Shape: {X_tr.shape} | Classes: {list(pipeline.label_encoder.classes_)}"
+        )
         return pipeline, X_tr, X_te, y_tr, y_te
 
     def _train(self, X_train, y_train, tune: bool = True):
         logger.info(f"[Step 3/5] Training {'+ GridSearch' if tune else '(no tuning)'}...")
         t0 = time.time()
 
-        cfg_model = self.cfg.candidates if hasattr(self.cfg, "candidates") else {}
+        self.cfg.candidates if hasattr(self.cfg, "candidates") else {}
         C_default = float(self.cfg.model.best_C or 1.0)
 
         if tune:
@@ -172,7 +176,8 @@ class TrainingPipeline:
                 random_state=42,
                 class_weight="balanced",
             ),
-            cv=3, method="sigmoid",
+            cv=3,
+            method="sigmoid",
         )
         grid = GridSearchCV(
             estimator=base,
@@ -184,39 +189,43 @@ class TrainingPipeline:
             verbose=0,
         )
         grid.fit(X_train, y_train)
-        logger.info(f"[GridSearch] Best params: {grid.best_params_} | CV F1: {grid.best_score_:.4f}")
+        logger.info(
+            f"[GridSearch] Best params: {grid.best_params_} | CV F1: {grid.best_score_:.4f}"
+        )
         return grid.best_estimator_, grid.best_params_
 
     def _build_svc(self, C: float):
         model = CalibratedClassifierCV(
             estimator=LinearSVC(
-                C=C, multi_class="crammer_singer",
-                max_iter=2000, random_state=42,
+                C=C,
+                multi_class="crammer_singer",
+                max_iter=2000,
+                random_state=42,
                 class_weight="balanced",
             ),
-            cv=3, method="sigmoid",
+            cv=3,
+            method="sigmoid",
         )
         return model, {"C": C}
 
     def _evaluate(self, model, X_test, y_test, feat_pipeline):
         logger.info("[Step 4/5] Evaluating on test set...")
-        y_pred    = model.predict(X_test)
-        classes   = feat_pipeline.label_encoder.classes_
-        f1_macro  = f1_score(y_test, y_pred, average="macro")
-        accuracy  = accuracy_score(y_test, y_pred)
-        report    = classification_report(y_test, y_pred, target_names=classes)
-        cm        = confusion_matrix(y_test, y_pred)
+        y_pred = model.predict(X_test)
+        classes = feat_pipeline.label_encoder.classes_
+        f1_macro = f1_score(y_test, y_pred, average="macro")
+        accuracy = accuracy_score(y_test, y_pred)
+        report = classification_report(y_test, y_pred, target_names=classes)
+        cm = confusion_matrix(y_test, y_pred)
 
         # Cross-validation sur le test final
         cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-        cv_scores = cross_val_score(model, X_test, y_test,
-                                    cv=cv, scoring="f1_macro", n_jobs=-1)
+        cv_scores = cross_val_score(model, X_test, y_test, cv=cv, scoring="f1_macro", n_jobs=-1)
 
         metrics = {
-            "test_f1_macro":  float(f1_macro),
-            "test_accuracy":  float(accuracy),
-            "cv_f1_mean":     float(cv_scores.mean()),
-            "cv_f1_std":      float(cv_scores.std()),
+            "test_f1_macro": float(f1_macro),
+            "test_accuracy": float(accuracy),
+            "cv_f1_mean": float(cv_scores.mean()),
+            "cv_f1_std": float(cv_scores.std()),
         }
         logger.info(f"[Eval] F1-macro={f1_macro:.4f} | Accuracy={accuracy:.4f}")
         return metrics, report, cm
@@ -236,12 +245,13 @@ class TrainingPipeline:
 
         # Metadata
         import json
+
         meta = {
-            "model_name":    self.artifacts.model_name,
-            "params":        str(self.artifacts.params),
-            "metrics":       self.artifacts.metrics,
-            "classes":       self.artifacts.classes,
-            "train_time_s":  self.artifacts.train_time_s,
+            "model_name": self.artifacts.model_name,
+            "params": str(self.artifacts.params),
+            "metrics": self.artifacts.metrics,
+            "classes": self.artifacts.classes,
+            "train_time_s": self.artifacts.train_time_s,
         }
         meta_path = base / "model_metadata.json"
         with open(meta_path, "w") as f:

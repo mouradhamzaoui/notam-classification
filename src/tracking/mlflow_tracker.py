@@ -10,17 +10,19 @@ Logue :
 """
 
 from __future__ import annotations
-import os
+
 import json
+import os
 import platform
 import subprocess
 from pathlib import Path
 from typing import Any
 
+import matplotlib
 import mlflow
 import mlflow.sklearn
 import numpy as np
-import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -50,8 +52,8 @@ class MLflowTracker:
     """
 
     def __init__(self, cfg: Config | None = None):
-        self.cfg        = cfg or Config.get()
-        self._run       = None
+        self.cfg = cfg or Config.get()
+        self._run = None
         self._connected = False
         self._setup()
 
@@ -83,8 +85,7 @@ class MLflowTracker:
         if exp is None:
             mlflow.create_experiment(
                 experiment_name,
-                tags={"project": self.cfg.project.name,
-                      "version": self.cfg.project.version}
+                tags={"project": self.cfg.project.name, "version": self.cfg.project.version},
             )
             logger.info(f"[MLflow] Created experiment: {experiment_name}")
         mlflow.set_experiment(experiment_name)
@@ -121,9 +122,9 @@ class MLflowTracker:
     def log_model(self, model, artifact_path: str = "model"):
         """Enregistre le modèle sklearn dans MLflow."""
         mlflow.sklearn.log_model(
-            sk_model       = model,
-            artifact_path  = artifact_path,
-            registered_model_name = self.cfg.mlflow.registered_model,
+            sk_model=model,
+            artifact_path=artifact_path,
+            registered_model_name=self.cfg.mlflow.registered_model,
         )
         logger.info(f"[MLflow] Model logged → artifact_path={artifact_path}")
 
@@ -139,18 +140,24 @@ class MLflowTracker:
         ax.set_facecolor("#161b22")
 
         cm_norm = cm.astype(float) / cm.sum(axis=1, keepdims=True)
-        short   = [c.replace("_", "\n") for c in classes]
+        short = [c.replace("_", "\n") for c in classes]
 
         sns.heatmap(
-            cm_norm, ax=ax, annot=True, fmt=".0%",
-            cmap="Blues", xticklabels=short, yticklabels=short,
-            linewidths=0.5, linecolor="#0d1117",
+            cm_norm,
+            ax=ax,
+            annot=True,
+            fmt=".0%",
+            cmap="Blues",
+            xticklabels=short,
+            yticklabels=short,
+            linewidths=0.5,
+            linecolor="#0d1117",
             annot_kws={"size": 9},
         )
         ax.set_title("Confusion Matrix (Normalized)", color="white")
         ax.tick_params(colors="#8b949e", labelsize=8)
         ax.set_xlabel("Predicted", color="#8b949e")
-        ax.set_ylabel("Actual",    color="#8b949e")
+        ax.set_ylabel("Actual", color="#8b949e")
 
         cm_path = Path("data/processed/mlflow_confusion_matrix.png")
         plt.savefig(cm_path, dpi=120, bbox_inches="tight", facecolor="#0d1117")
@@ -169,15 +176,18 @@ class MLflowTracker:
         """Logue les informations système pour la reproductibilité."""
         tags = {
             "python_version": platform.python_version(),
-            "platform":       platform.system(),
-            "hostname":       platform.node(),
+            "platform": platform.system(),
+            "hostname": platform.node(),
         }
         # Git commit hash si disponible
         try:
-            commit = subprocess.check_output(
-                ["git", "rev-parse", "--short", "HEAD"],
-                stderr=subprocess.DEVNULL
-            ).decode().strip()
+            commit = (
+                subprocess.check_output(
+                    ["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL
+                )
+                .decode()
+                .strip()
+            )
             tags["git_commit"] = commit
         except Exception:
             tags["git_commit"] = "unknown"
@@ -196,11 +206,13 @@ class MLflowTracker:
         with self.start_run(name):
             # Params
             self.log_params(artifacts.params)
-            self.log_params({
-                "n_features":    getattr(artifacts.feature_pipeline, "n_features", 0),
-                "cv_folds":      self.cfg.model.cv_folds,
-                "tfidf_vocab":   self.cfg.features.tfidf_max_features,
-            })
+            self.log_params(
+                {
+                    "n_features": getattr(artifacts.feature_pipeline, "n_features", 0),
+                    "cv_folds": self.cfg.model.cv_folds,
+                    "tfidf_vocab": self.cfg.features.tfidf_max_features,
+                }
+            )
 
             # Métriques
             self.log_metrics(artifacts.metrics)
@@ -208,11 +220,13 @@ class MLflowTracker:
 
             # Tags système
             self.log_system_tags()
-            self.log_tags({
-                "model_class":  artifacts.model_name,
-                "n_classes":    len(artifacts.classes),
-                "classes":      str(artifacts.classes),
-            })
+            self.log_tags(
+                {
+                    "model_class": artifacts.model_name,
+                    "n_classes": len(artifacts.classes),
+                    "classes": str(artifacts.classes),
+                }
+            )
 
             # Artifacts
             self.log_model(artifacts.model)
